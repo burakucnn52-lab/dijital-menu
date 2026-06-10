@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QMenu - Dijital Menü Platformu</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
+  :root {
+    --primary:#E63946;
+    --dark:#1D3557;
+    --light:#F1FAEE;
+    --accent:#FFB703;
+    --gray:#6c757d;
+  }
+  body { background:#f5f7fa; color:#222; min-height:100vh; }
+  .navbar {
+    background:linear-gradient(135deg,#E63946,#c1121f);
+    color:white; padding:15px 30px;
+    display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 4px 15px rgba(0,0,0,0.1); position:sticky; top:0; z-index:100;
+  }
+  .logo { font-size:1.6rem; font-weight:bold; display:flex; align-items:center; gap:10px; cursor:pointer; }
+  .logo span { background:white; color:var(--primary); padding:4px 10px; border-radius:8px; }
+  .nav-links { display:flex; gap:20px; align-items:center; }
+  .nav-links button {
+    background:rgba(255,255,255,0.15); color:white; border:none;
+    padding:8px 16px; border-radius:8px; cursor:pointer; font-size:0.95rem;
+    transition:0.3s;
+  }
+  .nav-links button:hover { background:white; color:var(--primary); }
+  .nav-links button.primary { background:white; color:var(--primary); font-weight:bold; }
+  .page { display:none; padding:30px; max-width:1200px; margin:0 auto; }
+  .page.active { display:block; animation:fade 0.4s; }
+  @keyframes fade { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+  .hero {
+    text-align:center; padding:60px 20px;
+    background:linear-gradient(135deg,#fff,#ffe5e8);
+    border-radius:20px; margin-bottom:40px;
+  }
+  .hero h1 { font-size:2.8rem; color:var(--dark); margin-bottom:15px; }
+  .hero h1 span { color:var(--primary); }
+  .hero p { font-size:1.1rem; color:var(--gray); max-width:600px; margin:0 auto 25px; }
+  .hero-btns { display:flex; gap:15px; justify-content:center; flex-wrap:wrap; }
+  .btn {
+    padding:14px 28px; border:none; border-radius:10px; font-size:1rem;
+    cursor:pointer; font-weight:600; transition:0.3s;
+  }
+  .btn-primary { background:var(--primary); color:white; }
+  .btn-primary:hover { background:#c1121f; transform:translateY(-2px); }
+  .btn-outline { background:white; color:var(--primary); border:2px solid var(--primary); }
+  .btn-outline:hover { background:var(--primary); color:white; }
+  .features { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:20px; margin-bottom:40px; }
+  .feature-card {
+    background:white; padding:25px; border-radius:15px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.05); text-align:center;
+    transition:0.3s;
+  }
+  .feature-card:hover { transform:translateY(-5px); box-shadow:0 10px 25px rgba(0,0,0,0.1); }
+  .feature-icon { font-size:2.5rem; margin-bottom:10px; }
+  .feature-card h3 { color:var(--dark); margin-bottom:8px; }
+  .feature-card p { color:var(--gray); font-size:0.95rem; }
+  .section-title { font-size:1.8rem; color:var(--dark); margin-bottom:20px; border-left:5px solid var(--primary); padding-left:15px; }
+  .filter-bar { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .filter-bar input, .filter-bar select {
+    padding:10px 15px; border:1px solid #ddd; border-radius:8px; font-size:0.95rem; flex:1; min-width:150px;
+  }
+  .restaurant-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; }
+  .restaurant-card {
+    background:white; border-radius:15px; overflow:hidden;
+    box-shadow:0 4px 12px rgba(0,0,0,0.06); cursor:pointer; transition:0.3s; position:relative;
+  }
+  .restaurant-card:hover { transform:translateY(-5px); box-shadow:0 12px 25px rgba(0,0,0,0.12); }
+  .restaurant-card.featured::before {
+    content:'⭐ ÖNE ÇIKAN'; position:absolute; top:10px; right:10px;
+    background:var(--accent); color:#333; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold; z-index:2;
+  }
+  .restaurant-img {
+    height:160px; background:linear-gradient(135deg,#E63946,#FFB703);
+    display:flex; align-items:center; justify-content:center; font-size:3.5rem; color:white;
+  }
+  .restaurant-info { padding:18px; }
+  .restaurant-info h3 { color:var(--dark); margin-bottom:5px; }
+  .restaurant-info .meta { color:var(--gray); font-size:0.9rem; margin-bottom:10px; }
+  .rating { color:var(--accent); font-weight:bold; }
+  .menu-header {
+    background:linear-gradient(135deg,var(--primary),#c1121f); color:white;
+    padding:30px; border-radius:15px; margin-bottom:25px; text-align:center;
+  }
+  .menu-header h1 { font-size:2rem; margin-bottom:5px; }
+  .points-badge {
+    display:inline-block; background:var(--accent); color:#333;
+    padding:8px 18px; border-radius:20px; font-weight:bold; margin-top:10px;
+  }
+  .category-tabs { display:flex; gap:10px; overflow-x:auto; margin-bottom:20px; padding-bottom:10px; }
+  .category-tabs button {
+    background:white; border:2px solid #eee; padding:10px 20px; border-radius:25px;
+    cursor:pointer; white-space:nowrap; font-weight:600; transition:0.3s;
+  }
+  .category-tabs button.active { background:var(--primary); color:white; border-color:var(--primary); }
+  .menu-items { display:grid; gap:15px; }
+  .menu-item {
+    background:white; border-radius:12px; padding:15px; display:flex; gap:15px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:0.3s;
+  }
+  .menu-item:hover { box-shadow:0 6px 16px rgba(0,0,0,0.1); }
+  .item-img {
+    width:90px; height:90px; border-radius:10px; flex-shrink:0;
+    background:linear-gradient(135deg,#FFB703,#E63946);
+    display:flex; align-items:center; justify-content:center; font-size:2.5rem;
+  }
+  .item-info { flex:1; }
+  .item-info h4 { color:var(--dark); margin-bottom:5px; }
+  .item-info p { color:var(--gray); font-size:0.9rem; margin-bottom:8px; }
+  .item-price { color:var(--primary); font-weight:bold; font-size:1.2rem; }
+  .admin-layout { display:grid; grid-template-columns:240px 1fr; gap:20px; }
+  .sidebar {
+    background:var(--dark); color:white; border-radius:15px; padding:20px; height:fit-content;
+  }
+  .sidebar h3 { margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); }
+  .sidebar button {
+    width:100%; background:transparent; color:white; border:none; padding:12px 15px;
+    text-align:left; cursor:pointer; border-radius:8px; margin-bottom:5px; transition:0.2s;
+  }
+  .sidebar button:hover, .sidebar button.active { background:var(--primary); }
+  .admin-content { background:white; border-radius:15px; padding:25px; }
+  .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:15px; margin-bottom:25px; }
+  .stat-card {
+    background:linear-gradient(135deg,#fff,#f8f9fa); padding:20px;
+    border-radius:12px; border-left:4px solid var(--primary);
+  }
+  .stat-card .num { font-size:2rem; font-weight:bold; color:var(--dark); }
+  .stat-card .label { color:var(--gray); font-size:0.9rem; }
+  .qr-display { text-align:center; padding:30px; background:#fafafa; border-radius:15px; }
+  .qr-display #qrcode { display:inline-block; padding:15px; background:white; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+  .form-group { margin-bottom:15px; }
+  .form-group label { display:block; margin-bottom:5px; font-weight:600; color:var(--dark); }
+  .form-group input, .form-group textarea, .form-group select {
+    width:100%; padding:10px 14px; border:1px solid #ddd; border-radius:8px; font-size:0.95rem;
+  }
+  .admin-table { width:100%; border-collapse:collapse; margin-top:15px; }
+  .admin-table th, .admin-table td { padding:12px; text-align:left; border-bottom:1px solid #eee; }
+  .admin-table th { background:#f8f9fa; color:var(--dark); }
+  .modal-bg {
+    display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;
+  }
+  .modal-bg.active { display:flex; }
+  .modal {
+    background:white; border-radius:15px; padding:30px; max-width:400px; width:90%;
+    text-align:center; animation:fade 0.3s;
+  }
+  .modal h2 { color:var(--dark); margin-bottom:15px; }
+  .modal input { width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px; font-size:1rem; }
+  .close-btn { position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--gray); }
+  @media(max-width:768px){
+    .admin-layout { grid-template-columns:1fr; }
+    .navbar { padding:12px 15px; }
+    .logo { font-size:1.2rem; }
+    .nav-links button { padding:6px 10px; font-size:0.85rem; }
+    .hero h1 { font-size:1.8rem; }
+    .menu-item { flex-direction:column; }
+    .item-img { width:100%; height:140px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo" onclick="showPage('home')">🍽️ <span>QMenu</span></div>
+  <div class="nav-links">
+    <button onclick="showPage('home')">Keşfet</button>
+    <button onclick="showPage('admin')">Restoran Paneli</button>
+    <button class="primary" onclick="openLogin()">Giriş</button>
+  </div>
+</nav>
+
+<div id="home" class="page active">
+  <div class="hero">
+    <h1>Dijital Menü <span>Yeni Nesil</span> Deneyimi</h1>
+    <p>QR okutun, menüyü görün, puan kazanın! Uygulama indirmenize gerek yok.</p>
+    <div class="hero-btns">
+      <button class="btn btn-primary" onclick="showPage('admin')">Restoranımı Ekle</button>
+      <button class="btn btn-outline" onclick="document.getElementById('restoList').scrollIntoView({behavior:'smooth'})">Restoranları Keşfet</button>
+    </div>
+  </div>
+  <div class="features">
+    <div class="feature-card"><div class="feature-icon">📱</div><h3>QR ile Anında</h3><p>Tarayıcıdan açılır, uygulama gerektirmez</p></div>
+    <div class="feature-card"><div class="feature-icon">⭐</div><h3>Sadakat Puanları</h3><p>Her ziyarette puan kazanın, ödüller alın</p></div>
+    <div class="feature-card"><div class="feature-icon">📊</div><h3>Detaylı Raporlar</h3><p>Restoran sahipleri için akıllı istatistikler</p></div>
+    <div class="feature-card"><div class="feature-icon">🔔</div><h3>Not & Hatırlatıcı</h3><p>İşletmenizi yönetmek artık çok kolay</p></div>
+  </div>
+  <h2 class="section-title" id="restoList">Restoranları Keşfet</h2>
+  <div class="filter-bar">
+    <input type="text" placeholder="🔍 Restoran ara..." id="search" oninput="filterRestos()">
+    <select id="cityFilter" onchange="filterRestos()">
+      <option value="">Tüm Şehirler</option>
+      <option>İstanbul</option><option>Ankara</option><option>İzmir</option><option>Bursa</option>
+    </select>
+  </div>
+  <div class="restaurant-grid" id="restoGrid"></div>
+</div>
+
+<div id="menu" class="page">
+  <div class="menu-header">
+    <h1 id="menuRestoName">Dönerci Mehmet Usta</h1>
+    <p>📍 İstanbul, Kadıköy · ⭐ 4.8</p>
+    <div class="points-badge" onclick="earnPoints()" style="cursor:pointer">🎁 Puanın: <span id="userPoints">0</span> | Tıkla puan kazan!</div>
+  </div>
+  <div class="category-tabs" id="catTabs"></div>
+  <div class="menu-items" id="menuItems"></div>
+</div>
+
+<div id="admin" class="page">
+  <div class="admin-layout">
+    <div class="sidebar">
+      <h3>📋 Yönetim</h3>
+      <button class="active" onclick="showAdminTab('dashboard',this)">📊 Dashboard</button>
+      <button onclick="showAdminTab('menuMng',this)">🍽️ Menü Yönetimi</button>
+      <button onclick="showAdminTab('qr',this)">📱 QR Kod</button>
+      <button onclick="showAdminTab('loyalty',this)">⭐ Sadakat</button>
+      <button onclick="showAdminTab('notes',this)">📝 Notlar</button>
+      <button onclick="showAdminTab('reports',this)">📈 Raporlar</button>
+    </div>
+    <div class="admin-content" id="adminContent"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="loginModal">
+  <div class="modal" style="position:relative">
+    <button class="close-btn" onclick="closeLogin()">×</button>
+    <h2>Giriş Yap</h2>
+    <p style="color:var(--gray); margin-bottom:20px">Telefon numaranızla şifresiz giriş</p>
+    <input type="tel" placeholder="📞 Telefon numaranız" id="phoneInput">
+    <button class="btn btn-primary" style="width:100%" onclick="alert('SMS kodu gönderildi! (Demo)'); closeLogin();">SMS Kodu Gönder</button>
+  </div>
+</div>
+
+<script>
+const restaurants = [
+  {id:1, name:'Dönerci Mehmet Usta', city:'İstanbul', district:'Kadıköy', rating:4.8, icon:'🥙', featured:true},
+  {id:2, name:'Pideci Hasan', city:'Ankara', district:'Çankaya', rating:4.5, icon:'🥖', featured:false},
+  {id:3, name:'Kebapçı Selim', city:'İzmir', district:'Konak', rating:4.7, icon:'🍖', featured:true},
+  {id:4, name:'Lahmacun Evi', city:'Bursa', district:'Nilüfer', rating:4.3, icon:'🫓', featured:false},
+  {id:5, name:'Tatlıcı Ayşe', city:'İstanbul', district:'Beşiktaş', rating:4.9, icon:'🍰', featured:false},
+  {id:6, name:'Çorbacı Ali', city:'Ankara', district:'Keçiören', rating:4.4, icon:'🍲', featured:false},
+];
+
+const menuData = {
+  categories:['Dönerler','İçecekler','Tatlılar','Salatalar'],
+  items:{
+    'Dönerler':[
+      {name:'Et Döner Porsiyon', desc:'Bol etli, özel soslu', price:180, icon:'🥙'},
+      {name:'Tavuk Döner Dürüm', desc:'Marine tavuk, taze sebze', price:120, icon:'🌯'},
+      {name:'Kuzu Döner Pilav Üstü', desc:'Tereyağlı pilav ile', price:220, icon:'🍛'},
+    ],
+    'İçecekler':[
+      {name:'Ayran', desc:'Köpüklü ev yapımı', price:25, icon:'🥛'},
+      {name:'Şalgam Suyu', desc:'Adana usulü acılı', price:30, icon:'🥤'},
+      {name:'Cola', desc:'Soğuk servis', price:35, icon:'🥤'},
+    ],
+    'Tatlılar':[
+      {name:'Künefe', desc:'Sıcak servis, fıstıklı', price:90, icon:'🍮'},
+      {name:'Sütlaç', desc:'Fırınlanmış', price:60, icon:'🍨'},
+    ],
+    'Salatalar':[
+      {name:'Çoban Salata', desc:'Mevsim sebzeleri', price:50, icon:'🥗'},
+      {name:'Gavurdağı', desc:'Cevizli', price:55, icon:'🥗'},
+    ]
+  }
+};
+
+let userPoints = parseInt(localStorage.getItem('points')||'0');
+document.getElementById('userPoints').textContent = userPoints;
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='admin') showAdminTab('dashboard');
+  window.scrollTo(0,0);
+}
+
+function renderRestos(list){
+  const grid = document.getElementById('restoGrid');
+  grid.innerHTML = list.map(r=>`
+    <div class="restaurant-card ${r.featured?'featured':''}" onclick="openMenu(${r.id},'${r.name}')">
+      <div class="restaurant-img">${r.icon}</div>
+      <div class="restaurant-info">
+        <h3>${r.name}</h3>
+        <div class="meta">📍 ${r.city}, ${r.district}</div>
+        <div class="rating">⭐ ${r.rating} · ${Math.floor(Math.random()*200+50)} değerlendirme</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterRestos(){
+  const q = document.getElementById('search').value.toLowerCase();
+  const city = document.getElementById('cityFilter').value;
+  renderRestos(restaurants.filter(r=>
+    r.name.toLowerCase().includes(q) && (!city || r.city===city)
+  ));
+}
+
+function openMenu(id,name){
+  document.getElementById('menuRestoName').textContent = name;
+  showPage('menu');
+  renderCategories();
+  showCategory('Dönerler');
+}
+
+function renderCategories(){
+  const tabs = document.getElementById('catTabs');
+  tabs.innerHTML = menuData.categories.map((c,i)=>
+    `<button class="${i===0?'active':''}" onclick="showCategory('${c}',this)">${c}</button>`
+  ).join('');
+}
+
+function showCategory(cat, btn){
+  if(btn){
+    document.querySelectorAll('#catTabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const items = menuData.items[cat]||[];
+  document.getElementById('menuItems').innerHTML = items.map(it=>`
+    <div class="menu-item">
+      <div class="item-img">${it.icon}</div>
+      <div class="item-info">
+        <h4>${it.name}</h4>
+        <p>${it.desc}</p>
+        <div class="item-price">${it.price} ₺</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function earnPoints(){
+  userPoints += 10;
+  localStorage.setItem('points',userPoints);
+  document.getElementById('userPoints').textContent = userPoints;
+  alert('🎉 10 puan kazandın! Toplam puanın: '+userPoints);
+}
+
+function showAdminTab(tab, btn){
+  if(btn){
+    document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const c = document.getElementById('adminContent');
+  if(tab==='dashboard'){
+    c.innerHTML = `
+      <h2 class="section-title">Dashboard</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num">1,247</div><div class="label">Bu Ay QR Okutma</div></div>
+        <div class="stat-card"><div class="num">342</div><div class="label">Sadakat Üyesi</div></div>
+        <div class="stat-card"><div class="num">⭐ 4.8</div><div class="label">Yorum Ortalaması</div></div>
+        <div class="stat-card"><div class="num">Et Döner</div><div class="label">En Çok Görüntülenen</div></div>
+      </div>
+      <h3 style="margin-top:20px; color:var(--dark)">Son Aktiviteler</h3>
+      <table class="admin-table">
+        <tr><th>Tarih</th><th>Aktivite</th><th>Müşteri</th></tr>
+        <tr><td>Bugün 14:30</td><td>QR Okutuldu</td><td>+90 532 *** ** 45</td></tr>
+        <tr><td>Bugün 13:12</td><td>Yorum bırakıldı (⭐5)</td><td>Ahmet K.</td></tr>
+        <tr><td>Dün 19:45</td><td>Ödül kullanıldı</td><td>+90 555 *** ** 12</td></tr>
+      </table>
+    `;
+  } else if(tab==='menuMng'){
+    c.innerHTML = `
+      <h2 class="section-title">Menü Yönetimi</h2>
+      <div class="form-group"><label>Ürün Adı</label><input type="text" placeholder="Örn: Et Döner Porsiyon"></div>
+      <div class="form-group"><label>Kategori</label><select><option>Dönerler</option><option>İçecekler</option><option>Tatlılar</option></select></div>
+      <div class="form-group"><label>Fiyat (₺)</label><input type="number" placeholder="180"></div>
+      <div class="form-group"><label>Açıklama</label><textarea rows="3" placeholder="Bol etli, özel soslu..."></textarea></div>
+      <div class="form-group"><label>Fotoğraf</label><input type="file" accept="image/*"></div>
+      <button class="btn btn-primary" onclick="alert('Ürün eklendi! (Demo)')">+ Ürün Ekle</button>
+      <h3 style="margin-top:25px; color:var(--dark)">Mevcut Ürünler</h3>
+      <table class="admin-table">
+        <tr><th>Ürün</th><th>Kategori</th><th>Fiyat</th><th>İşlem</th></tr>
+        <tr><td>Et Döner</td><td>Dönerler</td><td>180 ₺</td><td><button class="btn btn-outline" style="padding:5px 10px">Düzenle</button></td></tr>
+        <tr><td>Ayran</td><td>İçecekler</td><td>25 ₺</td><td><button class="btn btn-outline" style="padding:5px 10px">Düzenle</button></td></tr>
+      </table>
+    `;
+  } else if(tab==='qr'){
+    c.innerHTML = `
+      <h2 class="section-title">QR Kodunuz</h2>
+      <div class="qr-display">
+        <div id="qrcode"></div>
+        <p style="margin-top:15px; color:var(--gray)">Bu QR kodu yazdırıp masalarınıza yerleştirin</p>
+        <p style="margin-top:5px; font-size:0.9rem"><strong>Link:</strong> qmenu.app/r/mehmetusta</p>
+        <div style="margin-top:20px;">
+          <button class="btn btn-primary" onclick="downloadQR()">⬇️ PNG İndir</button>
+          <button class="btn btn-outline" onclick="window.print()">🖨️ Yazdır</button>
+        </div>
+      </div>
+    `;
+    setTimeout(()=>{
+      new QRCode(document.getElementById('qrcode'),{
+        text:'https://qmenu.app/r/mehmetusta',
+        width:220, height:220, colorDark:'#E63946', colorLight:'#ffffff'
+      });
+    },100);
+  } else if(tab==='loyalty'){
+    c.innerHTML = `
+      <h2 class="section-title">Sadakat Sistemi</h2>
+      <div class="form-group"><label>Puan Başına Ödül</label>
+        <input type="text" value="100 puan = 1 bedava döner"></div>
+      <div class="form-group"><label>Ziyaret Başına Puan</label><input type="number" value="10"></div>
+      <button class="btn btn-primary">Kaydet</button>
+      <h3 style="margin-top:25px; color:var(--dark)">Sadık Müşterileriniz</h3>
+      <table class="admin-table">
+        <tr><th>Müşteri</th><th>Puan</th><th>Ziyaret</th></tr>
+        <tr><td>+90 532 *** ** 45</td><td>340</td><td>34</td></tr>
+        <tr><td>+90 555 *** ** 12</td><td>210</td><td>21</td></tr>
+        <tr><td>+90 533 *** ** 89</td><td>180</td><td>18</td></tr>
+      </table>
+    `;
+  } else if(tab==='notes'){
+    c.innerHTML = `
+      <h2 class="section-title">Not & Hatırlatıcı</h2>
+      <div class="form-group"><label>Not</label><textarea rows="3" placeholder="Örn: Et siparişi ver"></textarea></div>
+      <div class="form-group"><label>Hatırlatma Tarihi</label><input type="datetime-local"></div>
+      <div class="form-group"><label>Bildirim Tipi</label><select><option>E-posta</option><option>SMS</option></select></div>
+      <button class="btn btn-primary" onclick="alert('Hatırlatıcı kuruldu!')">+ Hatırlatıcı Ekle</button>
+      <h3 style="margin-top:25px; color:var(--dark)">Aktif Hatırlatıcılar</h3>
+      <ul style="list-style:none">
+        <li style="padding:12px; background:#f8f9fa; border-radius:8px; margin-bottom:8px;">📌 <strong>Et siparişi ver</strong> - Yarın 09:00</li>
+        <li style="padding:12px; background:#f8f9fa; border-radius:8px; margin-bottom:8px;">📌 <strong>Fatura ödeme</strong> - 28 Kasım</li>
+        <li style="padding:12px; background:#f8f9fa; border-radius:8px;">📌 <strong>Sağlık denetimi</strong> - 5 Aralık 14:00</li>
+      </ul>
+    `;
+  } else if(tab==='reports'){
+    c.innerHTML = `
+      <h2 class="section-title">Aylık Raporlar</h2>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num">1,247</div><div class="label">Toplam QR Okutma</div></div>
+        <div class="stat-card"><div class="num">342</div><div class="label">Sadakat Üyesi</div></div>
+        <div class="stat-card"><div class="num">⭐ 4.8</div><div class="label">Yorum Ortalaması</div></div>
+        <div class="stat-card"><div class="num">28</div><div class="label">Yeni Yorum</div></div>
+      </div>
+      <h3 style="margin-top:20px; color:var(--dark)">En Çok Görüntülenen Ürünler</h3>
+      <table class="admin-table">
+        <tr><th>Sıra</th><th>Ürün</th><th>Görüntülenme</th></tr>
+        <tr><td>🥇</td><td>Et Döner Porsiyon</td><td>487</td></tr>
+        <tr><td>🥈</td><td>Tavuk Döner Dürüm</td><td>312</td></tr>
+        <tr><td>🥉</td><td>Ayran</td><td>289</td></tr>
+      </table>
+    `;
+  }
+}
+
+function downloadQR(){
+  const img = document.querySelector('#qrcode img');
+  if(img){
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.download = 'qmenu-qr.png';
+    a.click();
+  }
+}
+
+function openLogin(){ document.getElementById('loginModal').classList.add('active'); }
+function closeLogin(){ document.getElementById('loginModal').classList.remove('active'); }
+
+renderRestos(restaurants);
+</script>
+</body>
+</html>
